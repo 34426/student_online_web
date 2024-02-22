@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.dao.UserDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.study.entity.UserEntity" id="userMap">
+        <result property="id" column="id"/>
+        <result property="account" column="account"/>
+        <result property="password" column="password"/>
+        <result property="userName" column="user_name"/>
+        <result property="phone" column="phone"/>
+        <result property="sex" column="sex"/>
+        <result property="description" column="description"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="baseQuery">
+        u.id,
+        u.account,
+        u.password,
+        u.user_name AS userName,
+        u.phone,
+        CASE u.sex WHEN 0 THEN '男' WHEN 1 THEN '女' END AS sexName,
+        u.sex AS sex,
+        u.description,
+        DATE_FORMAT(u.create_time ,'%Y-%m-%d %H:%i:%s') AS createTime
+    </sql>
+
+    <select id="queryCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        `user` u
+        LEFT JOIN user_role ur ON u.id = ur.user_id
+        <where>
+            <if test="roleId != null">
+                AND ur.role_id = #{roleId}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryData" resultType="java.util.HashMap">
+        SELECT
+        c.id AS classId,
+        c.class_name AS className,
+        u1.user_name AS charger,
+        s.subject_name AS subjectName,
+        s.id AS subjectId,
+        <include refid="baseQuery"></include>
+        FROM
+        `user` u
+        LEFT JOIN user_role ur ON u.id = ur.user_id
+        LEFT JOIN user_class uc ON u.id = uc.user_id
+        LEFT JOIN class c ON c.id = uc.class_id
+        LEFT JOIN `user` u1 ON c.user_id = u1.id
+        LEFT JOIN user_subject us ON us.user_id = u.id
+        LEFT JOIN `subject` s ON us.subject_id = s.id
+        <where>
+            <if test="roleId != null">
+                AND ur.role_id = #{roleId}
+            </if>
+        </where>
+        ORDER BY u.id DESC
+        LIMIT #{page},#{pageSize}
+    </select>
+
+
+    <select id="login" resultType="java.util.HashMap">
+        SELECT
+        u.id AS userId,
+        u.user_name AS userName,
+        uc.class_id AS classId,
+        ur.role_id AS roleId
+        FROM
+        `user` u
+        LEFT JOIN user_role ur ON u.id = ur.user_id
+        LEFT JOIN user_class uc ON u.id = uc.user_id
+        <where>
+            <if test="account != null">
+                AND u.account = #{account}
+            </if>
+            <if test="password != null">
+                AND u.password = #{password}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="findNotDoWorkCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        `user` u
+        LEFT JOIN user_class uc ON uc.user_id = u.id
+        LEFT JOIN user_role ur ON ur.user_id = u.id
+        <where>
+            ur.role_id = 3
+            <if test="classId != null">
+                AND uc.class_id = #{classId}
+            </if>
+            <if test="exerciseId != null">
+                AND u.id NOT IN (
+                SELECT
+                ude.user_id
+                FROM
+                user_do_exercise ude
+                WHERE
+                ude.exercise_id = #{exerciseId})
+            </if>
+        </where>
+    </select>
+
+    <select id="findNotDoWorkData" resultType="java.util.HashMap">
+        SELECT
+        <include refid="baseQuery"></include>
+        FROM
+        `user` u
+        LEFT JOIN user_class uc ON uc.user_id = u.id
+        LEFT JOIN user_role ur ON ur.user_id = u.id
+        <where>
+            ur.role_id = 3
+            <if test="classId != null">
+                AND uc.class_id = #{classId}
+            </if>
+            <if test="exerciseId != null">
+                AND u.id NOT IN (
+                SELECT
+                ude.user_id
+                FROM
+                user_do_exercise ude
+                WHERE
+                ude.exercise_id = #{exerciseId})
+            </if>
+        </where>
+    </select>
+    <select id="findNotDoHomeworkCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        `user` u
+        LEFT JOIN user_class uc ON uc.user_id = u.id
+        LEFT JOIN user_role ur ON ur.user_id = u.id
+        <where>
+            ur.role_id = 3
+            <if test="classId != null">
+                AND uc.class_id = #{classId}
+            </if>
+            <if test="homeworkId != null">
+                AND u.id NOT IN (
+                SELECT
+                udh.user_id
+                FROM
+                user_do_homework udh
+                WHERE
+                udh.homework_id = #{homeworkId})
+            </if>
+        </where>
+    </select>
+    <select id="findNotDoHomeworkData" resultType="java.util.HashMap">
+        SELECT
+        <include refid="baseQuery"></include>
+        FROM
+        `user` u
+        LEFT JOIN user_class uc ON uc.user_id = u.id
+        LEFT JOIN user_role ur ON ur.user_id = u.id
+        <where>
+            ur.role_id = 3
+            <if test="classId != null">
+                AND uc.class_id = #{classId}
+            </if>
+            <if test="homeworkId != null">
+                AND u.id NOT IN (
+                SELECT
+                udh.user_id
+                FROM
+                user_do_homework udh
+                WHERE
+                udh.homework_id = #{homeworkId})
+            </if>
+        </where>
+    </select>
+
+    <select id="findList" resultType="java.util.HashMap">
+        SELECT
+        <include refid="baseQuery"></include>
+        FROM
+        `user` u
+        LEFT JOIN user_class uc ON uc.user_id = u.id
+        LEFT JOIN user_role ur ON ur.user_id = u.id
+        <where>
+            <if test="roleId != null">
+                ur.role_id = #{roleId} AND u.id NOT IN (SELECT IFNULL(c.user_id,-1) FROM class c)
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

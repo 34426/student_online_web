@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.dao.ExercisesDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.study.entity.ExercisesEntity" id="exercisesMap">
+        <result property="id" column="id"/>
+        <result property="content" column="content"/>
+        <result property="title" column="content"/>
+        <result property="answer" column="answer"/>
+        <result property="creator" column="creator"/>
+        <result property="classId" column="class_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="baseQuery">
+        e.id,
+        e.title,
+        e.content,
+        e.answer,
+        e.creator,
+        e.class_id AS classId,
+        DATE_FORMAT(e.create_time ,'%Y-%m-%d %H:%i:%s') AS createTime
+    </sql>
+
+    <select id="queryCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        exercises e
+        LEFT JOIN class c ON c.id = e.class_id
+        LEFT JOIN `user` u ON u.id = e.creator
+        LEFT JOIN user_subject us ON u.id = us.user_id
+        LEFT JOIN `subject` s ON s.id = us.subject_id
+        <where>
+            <if test="roleId == 2">
+                AND e.creator = #{userId}
+            </if>
+            <if test="roleId == 3">
+                AND e.class_id = #{classId}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryData" resultType="java.util.HashMap">
+        SELECT
+        c.class_name AS className,
+        u.user_name AS userName,
+        s.subject_name AS subjectName,
+        <include refid="baseQuery"></include>
+        FROM
+        exercises e
+        LEFT JOIN class c ON c.id = e.class_id
+        LEFT JOIN `user` u ON u.id = e.creator
+        LEFT JOIN user_subject us ON u.id = us.user_id
+        LEFT JOIN `subject` s ON s.id = us.subject_id
+        <where>
+            <if test="roleId == 2">
+                AND e.creator = #{userId}
+            </if>
+            <if test="classId != null">
+                AND e.class_id = #{classId}
+            </if>
+        </where>
+        ORDER BY e.id DESC
+        LIMIT #{page},#{pageSize}
+    </select>
+
+
+    <select id="findNotDoExercisesCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        exercises e
+        LEFT JOIN class c ON c.id = e.class_id
+        LEFT JOIN `user` u ON u.id = e.creator
+        LEFT JOIN user_subject us ON u.id = us.user_id
+        LEFT JOIN `subject` s ON s.id = us.subject_id
+        LEFT JOIN user_do_exercise ude ON e.id = ude.exercise_id
+        <where>
+            <if test="classId != null">
+                e.class_id = #{classId} AND ude.user_id IS NULL
+            </if>
+        </where>
+    </select>
+
+    <select id="findNotDoExercisesData" resultType="java.util.HashMap">
+        SELECT
+        c.class_name AS className,
+        u.user_name AS userName,
+        s.subject_name AS subjectName,
+        <include refid="baseQuery"></include>
+        FROM
+        exercises e
+        LEFT JOIN class c ON c.id = e.class_id
+        LEFT JOIN `user` u ON u.id = e.creator
+        LEFT JOIN user_subject us ON u.id = us.user_id
+        LEFT JOIN `subject` s ON s.id = us.subject_id
+        LEFT JOIN user_do_exercise ude ON e.id = ude.exercise_id
+        <where>
+            <if test="classId != null">
+                e.class_id = #{classId} AND ude.user_id IS NULL
+            </if>
+        </where>
+        ORDER BY e.id DESC
+        LIMIT #{page},#{pageSize}
+    </select>
+
+</mapper>

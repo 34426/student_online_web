@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.dao.VideosDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.study.entity.VideosEntity" id="videosMap">
+        <result property="id" column="id"/>
+        <result property="topic" column="topic"/>
+        <result property="videoUrl" column="video_url"/>
+        <result property="path" column="path"/>
+        <result property="sort" column="sort"/>
+    </resultMap>
+
+    <sql id="baseQuery">
+        id,
+        topic,
+        video_url AS videoUrl,
+        path,
+        sort
+    </sql>
+
+    <select id="queryCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        videos
+        <where>
+            <if test="topic != null">
+                AND topic = #{topic}
+            </if>
+            <if test="videoUrl != null">
+                AND video_url = #{videoUrl}
+            </if>
+            <if test="path != null">
+                AND path = #{path}
+            </if>
+            <if test="sort != null">
+                AND sort = #{sort}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryData" resultType="java.util.HashMap">
+        SELECT
+        <include refid="baseQuery"></include>
+        FROM
+        videos
+        <where>
+            <if test="topic != null">
+                AND topic = #{topic}
+            </if>
+            <if test="videoUrl != null">
+                AND video_url = #{videoUrl}
+            </if>
+            <if test="path != null">
+                AND path = #{path}
+            </if>
+            <if test="sort != null">
+                AND sort = #{sort}
+            </if>
+        </where>
+        LIMIT #{page},#{pageSize}
+    </select>
+
+
+</mapper>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.dao.RoleDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.study.entity.RoleEntity" id="roleMap">
+        <result property="id" column="id"/>
+        <result property="roleName" column="role_name"/>
+        <result property="description" column="description"/>
+    </resultMap>
+
+    <sql id="baseQuery">
+        id,
+        role_name AS roleName,
+        description AS description
+    </sql>
+
+    <select id="queryCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        role
+        <where>
+            <if test="roleName != null">
+                AND role_name = #{roleName}
+            </if>
+            <if test="description != null">
+                AND description = #{description}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryData" resultType="java.util.HashMap">
+        SELECT
+        <include refid="baseQuery"></include>
+        FROM
+        role
+        <where>
+            <if test="roleName != null">
+                AND role_name = #{roleName}
+            </if>
+            <if test="description != null">
+                AND description = #{description}
+            </if>
+        </where>
+        LIMIT #{page},#{pageSize}
+    </select>
+
+
+</mapper>

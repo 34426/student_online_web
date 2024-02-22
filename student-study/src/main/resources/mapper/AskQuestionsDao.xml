@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.dao.AskQuestionsDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.study.entity.AskQuestionsEntity" id="askQuestionsMap">
+        <result property="id" column="id"/>
+        <result property="sender" column="sender"/>
+        <result property="content" column="content"/>
+        <result property="recipient" column="recipient"/>
+        <result property="videoId" column="video_id"/>
+        <result property="restore" column="restore"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="baseQuery">
+        aq.id,
+        aq.sender,
+        aq.content,
+        aq.recipient,
+        aq.video_id AS videoId,
+        aq.restore,
+        CASE aq.status WHEN 1 THEN '已回复' WHEN 2 THEN '未回复' END AS status,
+        DATE_FORMAT(aq.create_time ,'%Y-%m-%d %H:%i:%s') AS createTime
+    </sql>
+
+    <select id="queryCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        ask_questions aq
+        LEFT JOIN `user` u1 ON u1.id = aq.sender
+        LEFT JOIN `user` u2 ON u2.id = aq.recipient
+        LEFT JOIN video_total vt ON vt.id = aq.video_id
+        <where>
+            <if test="userId != null">
+                AND (aq.sender = #{userId} OR aq.recipient = #{userId})
+            </if>
+            <if test="content != null">
+                AND aq.content = {content}
+            </if>
+            <if test="recipient != null">
+                AND aq.recipient = #{recipient}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryData" resultType="java.util.HashMap">
+        SELECT
+        u1.user_name AS senderName,
+        u2.user_name AS recipientName,
+        vt.topic,
+        <include refid="baseQuery"></include>
+        FROM
+        ask_questions aq
+        LEFT JOIN `user` u1 ON u1.id = aq.sender
+        LEFT JOIN `user` u2 ON u2.id = aq.recipient
+        LEFT JOIN video_total vt ON vt.id = aq.video_id
+        <where>
+            <if test="userId != null">
+                AND (aq.sender = #{userId} OR aq.recipient = #{userId})
+            </if>
+            <if test="content != null">
+                AND aq.content = {content}
+            </if>
+            <if test="recipient != null">
+                AND aq.recipient = #{recipient}
+            </if>
+        </where>
+        ORDER BY aq.id DESC
+        LIMIT #{page},#{pageSize}
+    </select>
+
+
+</mapper>

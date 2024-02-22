@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.dao.UserSubjectDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.study.entity.UserSubjectEntity" id="userSubjectMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="subjectId" column="subject_id"/>
+    </resultMap>
+    <select id="queryCount" resultType="java.lang.Integer">
+    </select>
+    <select id="queryData" resultType="java.util.HashMap">
+    </select>
+
+
+</mapper>

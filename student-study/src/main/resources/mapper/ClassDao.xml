@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.dao.ClassDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.study.entity.ClassEntity" id="classMap">
+        <result property="id" column="id"/>
+        <result property="className" column="class_name"/>
+        <result property="userId" column="user_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="baseQuery">
+        c.id,
+        c.class_name AS className,
+        c.user_id AS userId,
+        DATE_FORMAT(c.create_time ,'%Y-%m-%d %H:%i:%s') AS createTime
+    </sql>
+
+    <select id="queryCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        class c
+        LEFT JOIN `user` u ON u.id = c.user_id
+        <where>
+            <if test="className != null">
+                AND c.class_name = #{className}
+            </if>
+            <if test="userId != null">
+                AND c.user_id = {userId}
+            </if>
+            <if test="createTime != null">
+                AND c.create_time = #{createTime}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryData" resultType="java.util.HashMap">
+        SELECT
+        u.user_name AS userName,
+        <include refid="baseQuery"></include>
+        FROM
+        class c
+        LEFT JOIN `user` u ON u.id = c.user_id
+        <where>
+            <if test="className != null">
+                AND c.class_name = #{className}
+            </if>
+            <if test="userId != null">
+                AND c.user_id = {userId}
+            </if>
+            <if test="createTime != null">
+                AND c.create_time = #{createTime}
+            </if>
+        </where>
+        ORDER BY c.id DESC
+        LIMIT #{page},#{pageSize}
+    </select>
+
+    <select id="findList" resultType="java.util.HashMap">
+        SELECT
+        u.user_name AS userName,
+        <include refid="baseQuery"></include>
+        FROM
+        class c
+        LEFT JOIN `user` u ON u.id = c.user_id
+        <where>
+            <if test="userId != null">
+                AND c.user_id = {userId}
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

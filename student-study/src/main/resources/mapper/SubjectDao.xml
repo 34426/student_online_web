@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.dao.SubjectDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.study.entity.SubjectEntity" id="subjectMap">
+        <result property="id" column="id"/>
+        <result property="subjectName" column="subject_name"/>
+    </resultMap>
+
+    <sql id="baseQuery">
+        s.id,
+        s.subject_name AS subjectName
+    </sql>
+
+    <select id="queryCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        `subject` s
+        LEFT JOIN user_subject su ON s.id = su.subject_id
+        LEFT JOIN `user` u ON u.id = su.user_id
+        LEFT JOIN user_class uc ON u.id = uc.user_id
+        <where>
+            <if test="classId != null">
+                AND uc.class_id = #{classId}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryData" resultType="java.util.HashMap">
+        SELECT
+        *
+        FROM
+        `subject` s
+        LEFT JOIN user_subject su ON s.id = su.subject_id
+        LEFT JOIN `user` u ON u.id = su.user_id
+        LEFT JOIN user_class uc ON u.id = uc.user_id
+        <where>
+            <if test="classId != null">
+                AND uc.class_id = #{classId}
+            </if>
+        </where>
+        ORDER BY s.id DESC
+        LIMIT #{page},#{pageSize}
+    </select>
+
+
+    <select id="queryList" resultType="java.util.HashMap">
+        SELECT
+        <include refid="baseQuery"></include>
+        FROM
+        `subject` s
+        LEFT JOIN user_subject su ON s.id = su.subject_id
+        LEFT JOIN `user` u ON u.id = su.user_id
+        LEFT JOIN user_class uc ON u.id = uc.user_id
+        <where>
+            <if test="classId != null">
+                AND uc.class_id = #{classId}
+            </if>
+        </where>
+    </select>
+
+    <select id="findPageCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        `subject` s
+    </select>
+
+    <select id="findPageData" resultType="java.util.HashMap">
+        SELECT
+        <include refid="baseQuery"></include>
+        FROM
+        `subject` s
+        ORDER BY s.id DESC
+        LIMIT #{page},#{pageSize}
+    </select>
+
+
+</mapper>

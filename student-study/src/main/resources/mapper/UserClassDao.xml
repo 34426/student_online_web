@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.dao.UserClassDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.study.entity.UserClassEntity" id="userClassMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="classId" column="class_id"/>
+    </resultMap>
+
+    <sql id="baseQuery">
+        uc.id,
+        uc.user_id AS userId,
+        uc.class_id AS classId
+    </sql>
+
+    <select id="queryCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        user_class uc
+        LEFT JOIN `user` u ON uc.user_id = u.id
+        LEFT JOIN user_role ur ON ur.user_id = u.id
+        LEFT JOIN role r ON ur.role_id = r.id
+        LEFT JOIN class c ON uc.class_id = c.id
+        <where>
+            <if test="userId != null">
+                AND uc.class_id IN (
+                SELECT
+                uc.class_id
+                FROM
+                user_class uc
+                WHERE uc.user_id = #{userId}
+                )
+            </if>
+            <if test="classId != null">
+                AND uc.class_id = #{classId}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryData" resultType="java.util.HashMap">
+        SELECT
+        u.user_name AS userName,
+        u.account,
+        u.phone,
+        CASE u.sex WHEN 0 THEN '男' WHEN 1 THEN '女' END AS sexName,
+        u.sex AS sex,
+        r.description,
+        c.class_name AS className,
+        <include refid="baseQuery"></include>
+        FROM
+        user_class uc
+        LEFT JOIN `user` u ON uc.user_id = u.id
+        LEFT JOIN user_role ur ON ur.user_id = u.id
+        LEFT JOIN role r ON ur.role_id = r.id
+        LEFT JOIN class c ON uc.class_id = c.id
+        <where>
+            <if test="userId != null">
+                ur.role_id = 3
+                AND uc.class_id IN (
+                SELECT
+                uc.class_id
+                FROM
+                user_class uc
+                WHERE uc.user_id = #{userId}
+                )
+            </if>
+            <if test="classId != null">
+                AND uc.class_id = #{classId}
+            </if>
+        </where>
+        ORDER BY uc.id DESC
+        LIMIT #{page},#{pageSize}
+    </select>
+
+    <select id="selectByClassId" resultType="com.study.entity.UserClassEntity">
+        SELECT
+        <include refid="baseQuery"></include>
+        FROM
+        user_class uc
+        LEFT JOIN `user` u ON uc.user_id = u.id
+        LEFT JOIN user_role ur ON ur.user_id = u.id
+        <where>
+            <if test="classId != null">
+                AND uc.class_id = #{classId}
+            </if>
+            AND role_id = 3
+        </where>
+    </select>
+
+
+    <select id="findList" resultType="java.util.HashMap">
+        SELECT
+        c.class_name AS className,
+        <include refid="baseQuery"></include>
+        FROM
+        user_class uc
+        LEFT JOIN `user` u ON uc.user_id = u.id
+        LEFT JOIN class c ON c.id = uc.class_id
+        <where>
+            <if test="userId != null">
+                AND uc.user_id = #{userId}
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.dao.UserDoExerciseDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.study.entity.UserDoExerciseEntity" id="userDoExerciseMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="exerciseId" column="exercise_id"/>
+        <result property="reply" column="reply"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="baseQuery">
+        ude.id,
+        ude.user_id AS userId,
+        ude.exercise_id AS exerciseId,
+        ude.reply,
+        DATE_FORMAT(ude.create_time ,'%Y-%m-%d %H:%i:%s') AS createTime
+    </sql>
+
+    <select id="queryCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        user_do_exercise ude
+        LEFT JOIN exercises e ON ude.exercise_id = e.id
+        LEFT JOIN `user` u ON e.creator = u.id
+        LEFT JOIN user_subject us ON u.id = us.user_id
+        LEFT JOIN `subject` s ON s.id = us.subject_id
+        <where>
+            <if test="userId != null">
+                AND ude.user_id = #{userId}
+            </if>
+            <if test="exerciseId != null">
+                AND ude.exercise_id = #{exerciseId}
+            </if>
+            <if test="createTime != null">
+                AND ude.create_time = #{createTime}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryData" resultType="java.util.HashMap">
+        SELECT
+        e.title,
+        e.answer,
+        u.user_name AS userName,
+        u1.user_name AS replies,
+        s.subject_name AS subjectName,
+        <include refid="baseQuery"></include>
+        FROM
+        user_do_exercise ude
+        LEFT JOIN exercises e ON ude.exercise_id = e.id
+        LEFT JOIN `user` u ON e.creator = u.id
+        LEFT JOIN `user` u1 ON ude.user_id = u1.id
+        LEFT JOIN user_subject us ON u.id = us.user_id
+        LEFT JOIN `subject` s ON s.id = us.subject_id
+        <where>
+            <if test="userId != null">
+                AND ude.user_id = #{userId}
+            </if>
+            <if test="exerciseId != null">
+                AND ude.exercise_id = #{exerciseId}
+            </if>
+            <if test="createTime != null">
+                AND ude.create_time = #{createTime}
+            </if>
+        </where>
+        ORDER BY ude.id DESC
+        LIMIT #{page},#{pageSize}
+    </select>
+
+
+</mapper>

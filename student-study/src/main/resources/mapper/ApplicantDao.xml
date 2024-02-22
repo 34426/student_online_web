@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.dao.ApplicantDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.study.entity.ApplicantEntity" id="applicantMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="classId" column="class_id"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="baseQuery">
+        a.id,
+        a.user_id AS userId,
+        a.class_id AS classId,
+        CASE a.status WHEN 1 THEN '待审核' WHEN 2 THEN '已同意' WHEN 3 THEN '已驳回' END AS status,
+        DATE_FORMAT(a.create_time ,'%Y-%m-%d %H:%i:%s') AS createTime
+    </sql>
+
+    <select id="queryCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        applicant a
+        LEFT JOIN `user` u ON u.id = a.user_id
+        LEFT JOIN class c ON c.id = a.class_id
+        LEFT JOIN `user` u1 ON u1.id = c.user_id
+        <where>
+            <if test="userId != null and roleId!=3">
+                AND c.user_id = #{userId}
+            </if>
+            <if test="classId != null">
+                AND a.class_id = #{classId}
+            </if>
+            <if test="roleId == 3">
+                AND a.user_id = #{userId}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryData" resultType="java.util.HashMap">
+        SELECT
+        u.account,
+        u.user_name AS userName,
+        u.phone AS studentPhone,
+        c.class_name AS className,
+        u1.user_name AS charger,
+        u1.phone AS chargerPhone,
+        <include refid="baseQuery"/>
+        FROM
+        applicant a
+        LEFT JOIN `user` u ON u.id = a.user_id
+        LEFT JOIN class c ON c.id = a.class_id
+        LEFT JOIN `user` u1 ON u1.id = c.user_id
+        <where>
+            <if test="userId != null and roleId!=3 ">
+                AND c.user_id = #{userId}
+            </if>
+            <if test="classId != null">
+                AND a.class_id = #{classId}
+            </if>
+            <if test="roleId == 3">
+                AND a.user_id = #{userId}
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

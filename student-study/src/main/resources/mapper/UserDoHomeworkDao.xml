@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.dao.UserDoHomeworkDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.study.entity.UserDoHomeworkEntity" id="userDoHomeworkMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="homeworkId" column="homework_id"/>
+        <result property="reply" column="reply"/>
+        <result property="completionTime" column="completion_time"/>
+    </resultMap>
+
+    <sql id="baseQuery">
+        udh.id,
+        udh.user_id AS userId,
+        udh.homework_id AS homeworkId,
+        udh.reply,
+        udh.reply AS content,
+        DATE_FORMAT(udh.completion_time ,'%Y-%m-%d %H:%i:%s') AS completionTime,
+        udh.mode,
+        udh.score,
+        udh.remark
+    </sql>
+
+    <select id="queryCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*) AS total
+        FROM
+        user_do_homework udh
+        LEFT JOIN `user` u1 ON u1.id = udh.user_id
+        LEFT JOIN homework h ON h.id = udh.homework_id
+        LEFT JOIN `user` u ON u.id = h.creator
+        LEFT JOIN user_subject us ON u.id = us.user_id
+        LEFT JOIN `subject` s ON s.id = us.subject_id
+        <where>
+            <if test="userId != null">
+                AND udh.user_id = #{userId}
+            </if>
+            <if test="homeworkId != null">
+                AND udh.homework_id = #{homeworkId}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryData" resultType="java.util.HashMap">
+        SELECT
+        h.title,
+        h.answer,
+        u.user_name AS userName,
+        u1.user_name AS studentName,
+        s.subject_name AS subjectName,
+        h.class_id as classId,
+        <include refid="baseQuery"></include>
+        FROM
+        user_do_homework udh
+        LEFT JOIN `user` u1 ON u1.id = udh.user_id
+        LEFT JOIN homework h ON h.id = udh.homework_id
+        LEFT JOIN `user` u ON u.id = h.creator
+        LEFT JOIN user_subject us ON u.id = us.user_id
+        LEFT JOIN `subject` s ON s.id = us.subject_id
+        <where>
+            <if test="userId != null">
+                AND udh.user_id = #{userId}
+            </if>
+            <if test="homeworkId != null">
+                AND udh.homework_id = #{homeworkId}
+            </if>
+        </where>
+        ORDER BY udh.id DESC
+        LIMIT #{page},#{pageSize}
+    </select>
+
+    <update id="updateModeByUserId">
+        update user_do_homework
+        set mode = 1,
+            score = #{score},
+            remark = #{remark}
+        where user_id = #{userId} and homework_id = #{homeworkId}
+
+    </update>
+</mapper>
